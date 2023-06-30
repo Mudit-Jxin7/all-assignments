@@ -90,23 +90,65 @@ app.get('/admin/courses', (req, res) => {
 
 // User routes
 app.post('/users/signup', (req, res) => {
-  // logic to sign up user
+  const { username, password } = req.body;
+  const findUser = USERS.find(user => user.username === username);
+  if (findUser) {
+    res.status(400).send('Already Exists!');
+  } else {
+    USERS.push({ username: username, password: password, courses: [] });
+    res.status(200).send('User created successfully');
+  }
 });
 
 app.post('/users/login', (req, res) => {
-  // logic to log in user
+  const { username, password } = req.headers;
+  const findUser = USERS.find(user => user.username === username);
+  if (findUser && findUser.password === password) {
+    res.status(200).send('Logged in successfully');
+  } else {
+    res.status(400).send('Invalid Credentials');
+  }
 });
 
 app.get('/users/courses', (req, res) => {
-  // logic to list all courses
+  const { username, password } = req.headers;
+  const findUser = USERS.find(user => user.username === username);
+  if (findUser && findUser.password === password) {
+    res.status(200).json(COURSES);
+  } else {
+    res.status(400).send('Invalid credentials');
+  }
 });
 
 app.post('/users/courses/:courseId', (req, res) => {
   // logic to purchase a course
+  const { username, password } = req.headers;
+  const findUser = USERS.findIndex(user => user.username === username);
+  // console.log(findUser);
+  if (findUser !== -1 && USERS[findUser].password === password) {
+    const courseId = parseInt(req.params.courseId);
+    // console.log('Id ', courseId);
+    const findCourseIndex = COURSES.findIndex(course => course.id === courseId);
+    if (findCourseIndex !== -1) {
+      USERS[findUser].courses.push(courseId);
+      res.status(200).send('Course purchased successfully');
+    } else {
+      res.status(404).send('Course not found');
+    }
+  } else {
+    res.status(400).send('Invalid credentials');
+  }
+
 });
 
 app.get('/users/purchasedCourses', (req, res) => {
-  // logic to view purchased courses
+  const { username, password } = req.headers;
+  const findUser = USERS.findIndex(user => user.username === username);
+  if (findUser !== -1 && USERS[findUser].password === password) {
+    res.status(200).json(USERS[findUser].courses)
+  } else {
+    res.status(400).send('Invalid credentials');
+  }
 });
 
 app.listen(3000, () => {
